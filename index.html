@@ -90,6 +90,93 @@
                     <dt>■ 趣味</dt><dd>ハンドスピナー（指先で生み出す心地よい回転と、集中できる時間が魅力です）</dd>
                     <dt>■ 特技</dt><dd>美肌つくり（日々のスキンケアや、清潔感のある健やかな肌を保つことにこだわっています）</dd>
                 </dl>
+                 <!-- ==========================================================================
+                   ★ ここから：ハンドスピナー加速ミニゲーム
+                   ========================================================================== -->
+                <h3 class="section-title" id="spinner-game" style="margin-top: 40px;">ハンドスピナー連打ゲーム</h3>
+                <p style="color: #555; margin-bottom: 15px;">
+                    特技のハンドスピナーから着想を得たミニゲームです。下の「スピナー」を連打して最高回転数（RPM）を目指せ！
+                </p>
+
+                <!-- ゲーム画面のレイアウト -->
+                <div style="background: radial-gradient(circle, #2c4259 0%, #1a2a3a 100%); border-radius: 8px; padding: 30px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: relative; overflow: hidden;">
+                    <!-- スコア表示 -->
+                    <div style="color: #fff; font-size: 1.1rem; margin-bottom: 20px; font-family: monospace;">
+                        現在の回転数: <span id="current-rpm" style="color: #ffd700; font-size: 1.8rem; font-weight: bold;">0</span> RPM<br>
+                        🎉 最高記録: <span id="max-rpm" style="color: #00c6ff; font-size: 1.3rem; font-weight: bold;">0</span> RPM
+                    </div>
+
+                    <!-- 💡 コードだけで描いたリアルに回るハンドスピナー -->
+                    <div id="spinner-art" style="width: 120px; height: 120px; margin: 30px auto; position: relative; cursor: pointer; transition: transform 0.1s linear;">
+                        <!-- 中央のベアリング（軸） -->
+                        <div style="width: 30px; height: 30px; background: #bfa15f; border-radius: 50%; position: absolute; top: 45px; left: 45px; z-index: 10; box-shadow: 0 0 10px rgba(0,0,0,0.5);"></div>
+                        <!-- 羽1（上） -->
+                        <div style="width: 36px; height: 36px; background: #cbd5e1; border-radius: 50%; position: absolute; top: 0; left: 42px; border: 3px solid #bfa15f;"></div>
+                        <!-- 羽2（左下） -->
+                        <div style="width: 36px; height: 36px; background: #cbd5e1; border-radius: 50%; position: absolute; bottom: 10px; left: 10px; border: 3px solid #bfa15f;"></div>
+                        <!-- 羽3（右下） -->
+                        <div style="width: 36px; height: 36px; background: #cbd5e1; border-radius: 50%; position: absolute; bottom: 10px; right: 10px; border: 3px solid #bfa15f;"></div>
+                        <!-- 全体を繋ぐフレーム -->
+                        <div style="width: 80px; height: 80px; background: #94a3b8; position: absolute; top: 20px; left: 20px; clip-path: polygon(50% 0%, 100% 100%, 0% 100%); opacity: 0.8; z-index: 1;"></div>
+                    </div>
+
+                    <!-- タップボタン（スピナー本体を叩いてもボタンを押しても回ります） -->
+                    <button id="spin-btn" style="background: linear-gradient(135deg, #bfa15f, #9e8040); color: #fff; border: none; padding: 12px 35px; font-size: 1.1rem; font-weight: bold; border-radius: 25px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: all 0.2s;">
+                        TAP！加速させる
+                    </button>
+                </div>
+
+                <!-- ゲームを動かすプログラム -->
+                <script>
+                    let currentSpeed = 0;
+                    let maxSpeed = 0;
+                    let currentAngle = 0;
+                    const spinnerElement = document.getElementById('spinner-art');
+                    const currentRpmText = document.getElementById('current-rpm');
+                    const maxRpmText = document.getElementById('max-rpm');
+                    const spinButton = document.getElementById('spin-btn');
+
+                    // クリックした時に回転速度（RPM）をプラスする処理
+                    function boostSpinner() {
+                        currentSpeed += 120; // 1タップごとに120RPM加速
+                        if (currentSpeed > 3000) currentSpeed = 3000; // 最大3000回転でリミッター
+                        
+                        // ボタンをへこませる演出
+                        spinButton.style.transform = "scale(0.95)";
+                        setTimeout(() => spinButton.style.transform = "scale(1)", 100);
+                    }
+
+                    // スピナー本体とボタン、どちらを押しても遊べるようにする
+                    spinButton.addEventListener('click', boostSpinner);
+                    spinnerElement.addEventListener('click', boostSpinner);
+
+                    // 常に背景の裏側で動き続けるループ処理（スピナーの滑らかな回転と減速）
+                    function updateGame() {
+                        // 時間の経過とともに、摩擦で徐々にスピードが落ちていくリアルな物理計算
+                        currentSpeed *= 0.97; 
+                        if (currentSpeed < 0.1) currentSpeed = 0;
+
+                        // 現在の速度に合わせて、ハンドスピナーの角度を進める
+                        currentAngle += (currentSpeed / 60);
+                        spinnerElement.style.transform = `rotate(${currentAngle}deg)`;
+
+                        // 画面上の数字を書き換える
+                        currentRpmText.innerText = Math.round(currentSpeed);
+
+                        // 最高記録（ハイスコア）を超えたら記録を更新
+                        if (currentSpeed > maxSpeed) {
+                            maxSpeed = currentSpeed;
+                            maxRpmText.innerText = Math.round(maxSpeed);
+                        }
+
+                        // 次の画面更新のタイミングで再びこの命令を呼び出す（1秒間に60回ループ）
+                        requestAnimationFrame(updateGame);
+                    }
+                    updateGame(); // ゲームスタート！
+                </script>
+                <!-- ==========================================================================
+                   ★ ここまで：ハンドスピナー加速ミニゲーム
+                   ========================================================================== -->
                 <p style="margin-top: 25px; color: #555;">モヌリスタのウェブサイトへお越しいただきありがとうございます。柴田裕輔です。この場所を通じて、自分の好きなことや、日々の新しい発見を発信していければと思っています。</p>
                 <h3 class="section-title" id="concept" style="margin-top: 40px;">Concept</h3>
                 <p style="color: #444;">「モヌリスタ」という言葉を軸に、シンプルながらもブレない軸を持った活動やアイデアの発信を行っています。左のBOXで静かに回り続けるハンドスピナー的安定感や、美しく整えられた肌のように、細部までこだわりが詰まった空間を目指しています。</p>
