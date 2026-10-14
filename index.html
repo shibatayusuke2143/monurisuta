@@ -97,12 +97,56 @@
         </div>
     </main>
     <footer class="footer"><p>&copy; 2026 MONURISTA. All Rights Reserved.</p></footer>
-    <script>
-        const tsuboAudio = new Audio('https://mixkit.co');
-        tsuboAudio.volume = 0.3;
-        function playTsuboSound() {
-            tsuboAudio.currentTime = 0;
-            tsuboAudio.play().catch(function(error) { console.log(error); });
+     <script>
+        let globalCtx = null;
+
+        // ★新システム：クリックされた瞬間にブラウザの「ミュート状態」を毎回チェックして強制解除する
+        function handleTsuboClick() {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+
+                // まだ音声の土台が作られていないか、数日経ってブラウザに眠らされていたら新しく作り直す
+                if (!globalCtx || globalCtx.state === 'closed') {
+                    globalCtx = new AudioContext();
+                }
+
+                // 「suspended（眠っている状態）」なら、強制的に叩き起こす（resume）
+                if (globalCtx.state === 'suspended') {
+                    globalCtx.resume().then(() => {
+                        playAudioSignal(globalCtx);
+                    });
+                } else {
+                    playAudioSignal(globalCtx);
+                }
+            } catch (e) {
+                console.log("Audio boot error:", e);
+            }
+        }
+
+        // 音を合成してスピーカーを鳴らす実処理
+        function playAudioSignal(ctx) {
+            const osc1 = ctx.createOscillator();
+            const gain1 = ctx.createGain();
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(987.77, ctx.currentTime); 
+            osc1.frequency.exponentialRampToValueAtTime(1479.98, ctx.currentTime + 0.15); 
+            gain1.gain.setValueAtTime(0.08, ctx.currentTime);
+            gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+
+            const osc2 = ctx.createOscillator();
+            const gain2 = ctx.createGain();
+            osc2.type = 'triangle'; 
+            osc2.frequency.setValueAtTime(493.88, ctx.currentTime); 
+            osc2.frequency.exponentialRampToValueAtTime(1975.53, ctx.currentTime + 0.2); 
+            gain2.gain.setValueAtTime(0.04, ctx.currentTime);
+            gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+
+            osc1.connect(gain1); gain1.connect(ctx.destination);
+            osc2.connect(gain2); gain2.connect(ctx.destination);
+            
+            osc1.start(); osc1.stop(ctx.currentTime + 0.3);
+            osc2.start(); osc2.stop(ctx.currentTime + 0.4);
         }
     </script>
 </body>
